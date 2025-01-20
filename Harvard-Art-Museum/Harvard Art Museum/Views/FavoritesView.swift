@@ -8,23 +8,23 @@
 import SwiftUI
 
 struct FavoritesView: View {
-    @State private var favoriteArtworks: [Object] = [] // List of favorited artworks
+    @EnvironmentObject var favoritesManager: FavoritesManager
     @State private var searchText = ""
-
+    
     var filteredFavorites: [Object] {
         if searchText.isEmpty {
-            return favoriteArtworks
+            return favoritesManager.favoriteArtworks
         } else {
-            return favoriteArtworks.filter { object in
+            return favoritesManager.favoriteArtworks.filter { object in
                 object.title.localizedCaseInsensitiveContains(searchText)
             }
         }
     }
-
+    
     var body: some View {
         NavigationStack {
             VStack {
-                if favoriteArtworks.isEmpty { // no favorites
+                if favoritesManager.favoriteArtworks.isEmpty { // no favorites
                     VStack(spacing: 16) {
                         Text("You have no favorited artworks.")
                             .font(.title3)
@@ -43,55 +43,78 @@ struct FavoritesView: View {
                 } else {
                     List {
                         ForEach(filteredFavorites, id: \.objectid) { object in
-                            HStack(alignment: .top) {
-                                // image
-                                AsyncImage(url: URL(string: object.primaryimageurl)) { image in
-                                    image.resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                        .frame(width: 80, height: 80)
-                                        .cornerRadius(8)
-                                        .clipped()
-                                } placeholder: {
-                                    Color.gray
-                                        .frame(width: 80, height: 80)
-                                        .cornerRadius(8)
+                            ZStack(alignment: .leading) {
+                                NavigationLink(destination: ObjectView(object: object)) { EmptyView()
                                 }
-                                
-                                // artwork details
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(object.title)
-                                        .font(.headline)
-                                        .lineLimit(1)
-                                    Text("\(object.artist ?? "Unknown Artist"), \(object.dated ?? "Unknown Date")")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                    Text(object.description ?? "No description available")
-                                        .font(.body)
-                                        .foregroundColor(.secondary)
-                                        .lineLimit(2)
-                                }
-                                Spacer()
-                                
-                                Button(action: {
-                                    toggleFavorite(object: object)
-                                }) {
-                                    Image(systemName: "heart.fill")
-                                        .foregroundColor(.red)
+                                .opacity(0)
+                                HStack(alignment: .top) {
+                                    // image
+                                    ZStack(alignment: .topTrailing) {
+                                        AsyncImage(url: URL(string: object.primaryimageurl)) { image in
+                                            image.resizable()
+                                                .aspectRatio(contentMode: .fill)
+                                                .frame(width: 185, height: 112)
+                                                .cornerRadius(8)
+                                                .clipped()
+                                        } placeholder: {
+                                            Color.gray
+                                                .frame(width: 185, height: 112)
+                                                .cornerRadius(8)
+                                        }
+                                        // favorite button
+                                        Button(action: {
+                                            favoritesManager.toggleFavorite(object)
+                                        }) {
+                                            ZStack {
+                                                Circle()
+                                                    .fill()
+                                                    .foregroundColor(.white)
+                                                    .frame(width: 28, height: 28)
+                                                Image(systemName: favoritesManager.isFavorite(object) ? "heart.fill" : "heart")
+                                                    .foregroundColor(.red)
+                                                    .offset(y: 2)
+                                            }
+                                        }
+                                        .offset(x: -12, y: 12)
+                                        .buttonStyle(BorderlessButtonStyle())
+                                    }
+                                    
+                                    VStack(alignment: .leading) {
+                                        // artwork title
+                                        Text(object.title)
+                                            .font(.headline)
+                                            .lineLimit(1)
+                                        
+                                        // artist, year
+                                        if let artist = object.artist, let year = object.dated {
+                                            Text("\(artist), \(year)")
+                                                .font(.system(size: CGFloat(15)))
+                                        } else if let artist = object.artist {
+                                            Text(artist)
+                                                .font(.system(size: CGFloat(15)))
+                                        } else if let year = object.dated {
+                                            Text(year)
+                                                .font(.system(size: CGFloat(15)))
+                                        }
+                                        
+                                        // description
+                                        Text(object.description ?? "No description available")
+                                            .font(.system(size: CGFloat(13)))
+                                            .foregroundColor(.secondary)
+                                            .lineLimit(4)
+                                    }
                                 }
                             }
+                            .padding(.bottom)
+                            .listRowInsets(EdgeInsets())
                         }
+                        .listRowSeparator(.hidden)
                     }
-                    .searchable(text: $searchText, prompt: "Search for an artwork")
+                    .scrollContentBackground(.hidden)
                 }
             }
             .navigationTitle("Favorites")
-        }
-    }
-
-    // Toggle favorite functionality
-    private func toggleFavorite(object: Object) {
-        if let index = favoriteArtworks.firstIndex(where: { $0.objectid == object.objectid }) {
-            favoriteArtworks.remove(at: index)
+            .searchable(text: $searchText, prompt: "Search for an artwork")
         }
     }
 }

@@ -8,31 +8,18 @@
 import Foundation
 
 class FavoritesManager: ObservableObject {
-    @Published var favoriteIDs: Set<Int> = [] // stores favorite object IDs
-    var allObjects: [Object] = []
-
-    func addFavorite(_ object: Object) {
-        favoriteIDs.insert(object.objectid)
-    }
-
-    func removeFavorite(_ object: Object) {
-        favoriteIDs.remove(object.objectid)
-    }
+    @Published var favoriteArtworks: [Object] = []
 
     func toggleFavorite(_ object: Object) {
-        if favoriteIDs.contains(object.objectid) {
-            removeFavorite(object)
+        if let index = favoriteArtworks.firstIndex(where: { $0.objectid == object.objectid }) {
+            favoriteArtworks.remove(at: index) // remove
         } else {
-            addFavorite(object)
+            favoriteArtworks.append(object) // add
         }
     }
 
     func isFavorite(_ object: Object) -> Bool {
-        favoriteIDs.contains(object.objectid)
-    }
-
-    func favoriteObjects() -> [Object] {
-        allObjects.filter { favoriteIDs.contains($0.objectid) }
+        favoriteArtworks.contains(where: { $0.objectid == object.objectid })
     }
 }
 

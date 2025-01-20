@@ -10,7 +10,7 @@ import SwiftUI
 struct ExhibitionView: View {
     var exhibition: Exhibition
     @StateObject private var viewModel = ExhibitionViewModel()
-    @State private var favoriteArtworks = Set<Int>()
+    @EnvironmentObject var favoritesManager: FavoritesManager
     @State private var searchText = ""
     
     var filteredObjects: [Object] {
@@ -59,14 +59,14 @@ struct ExhibitionView: View {
                                     }
                                     // favorite button
                                     Button(action: {
-                                        toggleFavorite(objectId: object.objectid)
+                                        favoritesManager.toggleFavorite(object)
                                     }) {
                                         ZStack {
                                             Circle()
                                                 .fill()
                                                 .foregroundColor(.white)
                                                 .frame(width: 28, height: 28)
-                                            Image(systemName: favoriteArtworks.contains(object.objectid) ? "heart.fill" : "heart")
+                                            Image(systemName: favoritesManager.isFavorite(object) ? "heart.fill" : "heart")
                                                 .foregroundColor(.red)
                                                 .offset(y: 2)
                                         }
@@ -99,7 +99,6 @@ struct ExhibitionView: View {
                                         .foregroundColor(.secondary)
                                         .lineLimit(4)
                                 }
-
                             }
                         }
                         .padding(.bottom)
@@ -113,15 +112,6 @@ struct ExhibitionView: View {
                 await viewModel.fetchObjects(exhibitionId: exhibition.exhibitionid)
             }
         .searchable(text: $searchText, prompt: "Search for artwork")
-        }
-    }
-    
-    // favorite state for an artwork
-    private func toggleFavorite(objectId: Int) {
-        if favoriteArtworks.contains(objectId) {
-            favoriteArtworks.remove(objectId)
-        } else {
-            favoriteArtworks.insert(objectId)
         }
     }
 

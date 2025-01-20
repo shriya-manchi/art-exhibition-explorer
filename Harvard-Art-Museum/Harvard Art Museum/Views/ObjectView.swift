@@ -10,8 +10,8 @@ import SwiftUI
 struct ObjectView: View {
     var object: Object
     @StateObject private var viewModel = ExhibitionViewModel()
-    @State private var favoriteArtworks = Set<Int>()
-    
+    @EnvironmentObject var favoritesManager: FavoritesManager
+
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 4) {
@@ -35,12 +35,13 @@ struct ObjectView: View {
                         .bold()
                     Spacer()
                     Button(action: {
-                        toggleFavorite(objectId: object.objectid)
+                        favoritesManager.toggleFavorite(object)
                     }) {
-                        Image(systemName: favoriteArtworks.contains(object.objectid) ? "heart.fill" : "heart")
+                        Image(systemName: favoritesManager.isFavorite(object) ? "heart.fill" : "heart")
                             .foregroundColor(.red)
                     }
                 }
+
                 // artist
                 HStack {
                     Text("Artist:")
@@ -86,13 +87,6 @@ struct ObjectView: View {
             }
             .padding(.horizontal)
             Spacer()
-        }
-    }
-    private func toggleFavorite(objectId: Int) {
-        if favoriteArtworks.contains(objectId) {
-            favoriteArtworks.remove(objectId)
-        } else {
-            favoriteArtworks.insert(objectId)
         }
     }
 }
